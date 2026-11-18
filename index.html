@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f1f3f8">
+  <title>Mapa de Estudos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <h1>Mapa de Estudos</h1>
+      <p class="today" id="today"></p>
+    </div>
+    <div class="actions">
+      <button class="btn" data-act="alerts"><span data-i="bell"></span>Avisos</button>
+      <button class="btn" data-act="backup">Backup</button>
+      <button class="btn" data-act="new-topic"><span data-i="plus"></span>Assunto</button>
+      <button class="btn primary" data-act="new-disc"><span data-i="plus"></span>Disciplina</button>
+    </div>
+  </header>
+
+  <div id="banner"></div>
+  <section class="strip" id="strip" aria-label="Agora e a seguir"></section>
+
+  <main class="grid">
+    <section class="panel span-5" aria-labelledby="h-ov">
+      <div class="ph"><h2 id="h-ov">Progresso geral</h2></div>
+      <div id="ov"></div>
+    </section>
+    <section class="panel span-7" aria-labelledby="h-bars">
+      <div class="ph"><h2 id="h-bars">Por disciplina</h2><span class="hint">Toque numa disciplina para filtrar o painel</span></div>
+      <div id="bars" class="bars"></div>
+    </section>
+    <section class="panel span-8" id="weekPanel" aria-labelledby="h-wk">
+      <div class="ph">
+        <h2 id="h-wk">Semana</h2>
+        <div class="seg" role="group" aria-label="Modo de exibição">
+          <button type="button" data-act="week-view" data-v="grid" aria-pressed="true">Grade</button>
+          <button type="button" data-act="week-view" data-v="list" aria-pressed="false">Lista</button>
+        </div>
+      </div>
+      <div class="keys" aria-hidden="true"><span><i class="bk"></i>Horário de estudo</span><span><i class="mkd"></i>Lembrete</span><span><i class="nl"></i>Agora</span></div>
+      <div class="scroll"><div id="weekBody"></div></div>
+    </section>
+    <section class="panel span-4" id="remPanel" aria-labelledby="h-rem">
+      <div class="ph"><h2 id="h-rem">Lembretes</h2><button class="btn sm" data-act="new-topic"><span data-i="plus"></span>Novo</button></div>
+      <div id="rem" class="rem-list"></div>
+    </section>
+  </main>
+
+  <section class="dsec" aria-labelledby="h-d">
+    <div class="ph" style="margin:0"><h2 id="h-d">Disciplinas e assuntos</h2></div>
+    <div class="filters">
+      <div class="chips" id="chips"></div>
+      <div class="tools">
+        <label class="sr" for="q">Buscar assunto</label>
+        <input id="q" type="search" placeholder="Buscar assunto" autocomplete="off">
+        <div class="seg" id="stSeg" role="group" aria-label="Filtrar por status">
+          <button type="button" data-act="st-filter" data-v="all" aria-pressed="true">Todos</button>
+          <button type="button" data-act="st-filter" data-v="todo" aria-pressed="false">A estudar</button>
+          <button type="button" data-act="st-filter" data-v="doing" aria-pressed="false">Estudando</button>
+          <button type="button" data-act="st-filter" data-v="done" aria-pressed="false">Concluídos</button>
+        </div>
+      </div>
+    </div>
+    <div class="cards" id="cards"></div>
+  </section>
+  <p class="foot" id="foot"></p>
+</div>
+
+<div id="toasts" aria-live="polite"></div>
+
+<dialog id="dlgDisc" aria-labelledby="dDiscTitle">
+  <form id="fDisc" novalidate>
+    <header><h3 id="dDiscTitle">Nova disciplina</h3><button type="button" class="iconbtn" data-close aria-label="Fechar"><span data-i="x"></span></button></header>
+    <div class="dbody">
+      <div><label for="dName">Nome da disciplina</label><input id="dName" type="text" maxlength="60" placeholder="Ex.: Matemática" autocomplete="off"></div>
+      <fieldset><legend>Cor</legend><div class="swatches" id="dColors"></div></fieldset>
+      <div>
+        <div class="sh"><span>Horários de estudo na semana</span><button type="button" class="btn sm" id="addSess"><span data-i="plus"></span>Horário</button></div>
+        <div id="sessRows"></div>
+      </div>
+      <p class="err" id="dErr" hidden></p>
+    </div>
+    <footer>
+      <button type="button" class="btn danger" id="dDel" hidden>Excluir disciplina</button>
+      <span class="sp"></span>
+      <button type="button" class="btn" data-close>Cancelar</button>
+      <button type="submit" class="btn primary">Salvar</button>
+    </footer>
+  </form>
+</dialog>
+
+<dialog id="dlgTopic" aria-labelledby="dTopicTitle">
+  <form id="fTopic" novalidate>
+    <header><h3 id="dTopicTitle">Novo assunto</h3><button type="button" class="iconbtn" data-close aria-label="Fechar"><span data-i="x"></span></button></header>
+    <div class="dbody">
+      <div><label for="tTitle">Assunto</label><input id="tTitle" type="text" maxlength="120" placeholder="Ex.: Análise combinatória" autocomplete="off"></div>
+      <div class="two">
+        <div><label for="tDisc">Disciplina</label><select id="tDisc"></select></div>
+        <div><label for="tStatus">Status</label><select id="tStatus"><option value="todo">A estudar</option><option value="doing">Estudando</option><option value="done">Concluído</option></select></div>
+      </div>
+      <div>
+        <div class="two">
+          <div><label for="tRemind">Avisar em (data e hora)</label><input id="tRemind" type="datetime-local"></div>
+          <div><label for="tLead">Antecedência</label><select id="tLead"></select></div>
+        </div>
+        <div class="quick">
+          <button type="button" class="btn sm" data-q="0,20">Hoje 20:00</button>
+          <button type="button" class="btn sm" data-q="1,8">Amanhã 08:00</button>
+          <button type="button" class="btn sm" data-q="7,19">Em 1 semana</button>
+          <button type="button" class="btn sm ghost" data-q="clear">Sem lembrete</button>
+        </div>
+      </div>
+      <div><label for="tNotes">Anotações (opcional)</label><textarea id="tNotes" rows="3" maxlength="500" placeholder="Páginas, exercícios, links..."></textarea></div>
+      <p class="err" id="tErr" hidden></p>
+    </div>
+    <footer>
+      <button type="button" class="btn danger" id="tDel" hidden>Excluir assunto</button>
+      <span class="sp"></span>
+      <button type="button" class="btn" data-close>Cancelar</button>
+      <button type="submit" class="btn primary">Salvar</button>
+    </footer>
+  </form>
+</dialog>
+
+<dialog id="dlgAlerts" aria-labelledby="dAlertsTitle">
+  <form method="dialog" id="fAlerts">
+    <header><h3 id="dAlertsTitle">Avisos</h3><button type="button" class="iconbtn" data-close aria-label="Fechar"><span data-i="x"></span></button></header>
+    <div class="dbody" id="alertsBody"></div>
+    <footer><span class="sp"></span><button type="button" class="btn primary" data-close>Pronto</button></footer>
+  </form>
+</dialog>
+
+<dialog id="dlgBackup" aria-labelledby="dBackupTitle">
+  <form id="fBackup" novalidate>
+    <header><h3 id="dBackupTitle">Backup dos dados</h3><button type="button" class="iconbtn" data-close aria-label="Fechar"><span data-i="x"></span></button></header>
+    <div class="dbody">
+      <p class="note-t">Seus dados ficam salvos neste navegador. Copie o texto abaixo para guardar uma cópia ou levar para outro aparelho.</p>
+      <div><label for="bOut">Exportar</label><textarea id="bOut" class="code" readonly></textarea></div>
+      <div><button type="button" class="btn sm" id="bCopy">Copiar</button></div>
+      <div><label for="bIn">Importar (cole o texto copiado)</label><textarea id="bIn" class="code" placeholder='{"v":1,"disciplines":[...]}'></textarea></div>
+      <p class="err" id="bErr" hidden></p>
+    </div>
+    <footer><span class="sp"></span><button type="button" class="btn" data-close>Fechar</button><button type="submit" class="btn primary">Importar e substituir</button></footer>
+  </form>
+</dialog>
+<script src="./app.js"></script>
+</body>
+</html>
